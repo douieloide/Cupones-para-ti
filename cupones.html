@@ -1,0 +1,966 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOVE ARCADE — Loui ♥ Dada</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:#ff4fa3;
+  --purple:#9b5cff;
+  --cyan:#5ff5ff;
+  --yellow:#ffe66d;
+  --dark:#170d2d;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  min-height:100vh;
+  padding:18px 10px 25px;
+  color:white;
+  text-align:center;
+  font-family:'Nunito',sans-serif;
+  background-color:#160b2b;
+  background-image:
+    linear-gradient(#a35cff18 1px,transparent 1px),
+    linear-gradient(90deg,#a35cff18 1px,transparent 1px),
+    radial-gradient(ellipse at top,#48216b,#160b2b 70%);
+  background-size:25px 25px,25px 25px,auto;
+}
+h1 {
+  margin:5px 0 10px;
+  font:clamp(20px,5vw,34px) 'Press Start 2P',monospace;
+  line-height:1.5;
+  color:#fff;
+  text-shadow:3px 3px var(--pink),0 0 20px var(--purple);
+}
+.subtitle {
+  color:#ffd5ee;
+  font-weight:900;
+  letter-spacing:3px;
+  margin-bottom:18px;
+}
+.machine {
+  width:min(100%,470px);
+  margin:auto;
+  padding:12px;
+  border:4px solid #ff91d1;
+  border-radius:23px 23px 13px 13px;
+  background:linear-gradient(145deg,#7934a9,#351456 55%,#21103d);
+  box-shadow:0 0 0 4px #632c94,0 0 25px #ff4fa399,0 15px 40px #0008;
+}
+.marquee {
+  position:relative;
+  overflow:hidden;
+  padding:14px 5px;
+  margin-bottom:12px;
+  border:3px solid var(--yellow);
+  border-radius:12px;
+  background:linear-gradient(90deg,#fa419b,#7f39de,#fa419b);
+  box-shadow:inset 0 0 15px #fff5,0 0 15px #ff4fa366;
+  font:clamp(12px,3vw,17px) 'Press Start 2P',monospace;
+  line-height:1.7;
+}
+.lights {
+  display:flex;
+  justify-content:space-around;
+  margin:0 0 12px;
+}
+.lights i {
+  display:block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--yellow);
+  box-shadow:0 0 12px var(--yellow);
+  animation:blink 1s infinite alternate;
+}
+.lights i:nth-child(even) {
+  background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);
+  animation-delay:.5s;
+}
+@keyframes blink { to { opacity:.3; } }
+
+.screen-frame {
+  position: relative;
+  width: 100%;
+  padding: 5px;
+  border: 3px solid #ff8acb;
+  border-radius: 12px;
+  background: #10081e;
+  box-shadow: inset 0 0 18px #000, 0 0 12px #ff4fa355;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 4;
+  border-radius: 6px;
+  background: #211039;
+}
+
+.screen-message {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 82%;
+  max-height: 78%;
+  overflow-y: auto;
+  padding: 14px;
+  border: 2px solid #ff91d1;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #35134df2, #170b2df5);
+  box-shadow: 0 0 20px #ff4fa366;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.screen-message.hidden {
+  display: none;
+}
+#couponTitle {
+  color:#ffe66d;
+  font-size:clamp(18px,4.5vw,24px);
+  font-weight:900;
+  line-height:1.25;
+  margin:5px 0 10px;
+  text-shadow:0 0 12px #ffb8e5;
+}
+#couponDesc {
+  font-size:14px;
+  line-height:1.5;
+  color:#fff1fa;
+  max-width:330px;
+}
+.small-note {
+  color:#d8c0f6;
+  font-size:11px;
+  margin-top:12px;
+}
+.panel {
+  margin-top:12px;
+  padding:13px 10px 15px;
+  border:2px solid #b878ff;
+  border-radius:13px;
+  background:linear-gradient(135deg,#32114e,#1c0b33);
+}
+.panel-title {
+  font:10px 'Press Start 2P',monospace;
+  color:var(--cyan);
+  margin-bottom:12px;
+  line-height:1.8;
+}
+.control-row {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  flex-wrap:wrap;
+}
+.joystick-area {
+  width:142px;
+  height:68px;
+  position:relative;
+  touch-action:none;
+  border:2px solid #9b65cc;
+  border-radius:40px;
+  background:linear-gradient(#170a2b,#32134d);
+  box-shadow:inset 0 0 12px #0008;
+  cursor:grab;
+}
+.joystick-area:active { cursor:grabbing; }
+.joystick-area::before {
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  top:32px;
+  border-top:2px dashed #b98ae4;
+}
+.joystick-ball {
+  position:absolute;
+  top:13px;
+  left:calc(50% - 17px);
+  width:34px;
+  height:34px;
+  border:3px solid #ffd7f0;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 25%,#fff,#ff73bd 40%,#a522a9);
+  box-shadow:0 0 14px #ff4fa3;
+  pointer-events:none;
+}
+.control-help {
+  color:#d9c5f4;
+  font-size:11px;
+  margin-top:9px;
+}
+.action-button {
+  width:100%;
+  max-width:330px;
+  margin:14px auto 0;
+  display:block;
+  border:0;
+  border-bottom:5px solid #9e236c;
+  border-radius:12px;
+  padding:16px 12px;
+  background:linear-gradient(180deg,#ff78c1,#f53897);
+  color:white;
+  font:12px 'Press Start 2P',monospace;
+  line-height:1.8;
+  text-shadow:1px 2px #a32669;
+  box-shadow:0 0 18px #ff4fa355;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.action-button:active {
+  transform:translateY(3px);
+  border-bottom-width:2px;
+}
+.action-button:disabled {
+  opacity:.55;
+  cursor:wait;
+}
+.status {
+  min-height:24px;
+  margin:12px 3px 0;
+  color:#ffe7f5;
+  font-size:13px;
+  font-weight:900;
+  line-height:1.5;
+}
+.slot {
+  margin-top:12px;
+  padding:11px;
+  border:2px solid #a85cff;
+  border-radius:10px;
+  background:#170a2b;
+  box-shadow:inset 0 0 12px #0009;
+}
+.slot-label {
+  color:#ffb4df;
+  font:9px 'Press Start 2P',monospace;
+  line-height:1.8;
+}
+.slot-opening {
+  width:70%;
+  height:9px;
+  margin:10px auto 0;
+  border-radius:8px;
+  background:#07040d;
+  box-shadow:0 0 10px #000;
+}
+.footer {
+  margin:17px auto 0;
+  max-width:450px;
+  color:#e3d0fa;
+  font-size:11px;
+  line-height:1.9;
+}
+.footer strong { color:#ff9bd5; }
+@media(max-width:360px) {
+  body { padding:12px 7px; }
+  .machine { padding:8px; }
+  .control-row { gap:12px; }
+}
+
+.collection {
+  width: min(100%, 470px);
+  margin: 20px auto;
+  padding: 16px 12px;
+  border: 2px solid #b878ff;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #29103f, #170b2d);
+  box-shadow: 0 0 18px #9b5cff33;
+}
+.collection h2 {
+  color: #ff91d1;
+  font: 12px 'Press Start 2P', monospace;
+  line-height: 1.8;
+}
+#collectionProgress {
+  color: #5ff5ff;
+  font: 10px 'Press Start 2P', monospace;
+  margin: 14px 0;
+}
+.collection-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #090411;
+  margin-bottom: 16px;
+}
+#collectionFill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ff4fa3, #9b5cff, #5ff5ff);
+  transition: width .3s;
+}
+.coupon-collection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  text-align: left;
+}
+.collection-card {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid #75499b;
+  border-radius: 9px;
+  background: #1d1030;
+  color: #bda8d3;
+  font: 10px 'Nunito', sans-serif;
+  overflow-wrap: anywhere;
+}
+.collection-card.earned {
+  border-color: #ff78c1;
+  background: linear-gradient(135deg, #48204f, #28123e);
+  color: #fff0fa;
+  cursor: pointer;
+}
+.collection-card.earned strong {
+  color: #ffe66d;
+}
+.collection-card .number {
+  display: block;
+  color: #5ff5ff;
+  font-weight: 900;
+  margin-bottom: 5px;
+}
+.collection-note {
+  color: #d8c0f6;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+</style>
+</head>
+<body>
+
+<h1>LOVE ARCADE</h1>
+<div class="subtitle">♡ UNA PARTIDA PARA DADA ♡</div>
+
+<main class="machine">
+  <div class="marquee">★ LOUI ♥ DADA ★</div>
+  <div class="lights">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+
+  <div class="screen-frame">
+    <canvas id="game" width="600" height="480"></canvas>
+    <div class="screen-message" id="resultScreen">
+      <div class="ticket-label">♡ LOVE ARCADE ♡</div>
+      <div id="couponTitle">¡Un premio para ti!</div>
+      <div id="couponDesc">Mueve la palanca para elegir dónde bajar la garra. Cuando estés listo, pulsa el botón rosa.</div>
+      <div class="small-note" id="ticketNote">Hecho por Loui, para el amor de su vida </div>
+      
+      <button id="closeCoupon" style="
+  margin-top:12px;
+  padding:9px 12px;
+  border:1px solid #5ff5ff;
+  border-radius:9px;
+  background:#28103b;
+  color:#5ff5ff;
+  font-weight:900;
+  cursor:pointer;
+">VER LA MÁQUINA ♡</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">CONTROLES DE LA MÁQUINA</div>
+    <div class="control-row">
+      <div>
+        <div class="joystick-area" id="joystick">
+          <div class="joystick-ball" id="joystickBall"></div>
+        </div>
+        <div class="control-help">← Mueve la palanca →</div>
+      </div>
+    </div>
+    <button class="action-button" id="actionButton">♡ BAJAR GARRA ♡</button>
+    <div class="status" id="status">Elige tu premio, mi amor. ¡Tú puedes!</div>
+  </div>
+
+</main>
+
+<div class="footer">
+  <strong>40 CUPONES · INFINITOS MOTIVOS PARA AMARTE</strong><br>
+</div>
+
+
+<section class="collection">
+  <h2> COLECCIÓN DE DADA</h2>
+  <p id="collectionProgress">0 / 40 CUPONES</p>
+  <div class="collection-track">
+    <div id="collectionFill"></div>
+  </div>
+  <div id="couponCollection" class="coupon-collection"></div>
+  <p class="collection-note">Cada premio es un pedacito del amor que siento por ti. </p>
+</section>
+
+
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const joystick = document.getElementById('joystick');
+  const joystickBall = document.getElementById('joystickBall');
+  const actionButton = document.getElementById('actionButton');
+  const statusText = document.getElementById('status');
+  const resultScreen = document.getElementById('resultScreen');
+  const couponTitle = document.getElementById('couponTitle');
+  const couponDesc = document.getElementById('couponDesc');
+  const ticketNote = document.getElementById('ticketNote');
+
+const closeCoupon = document.getElementById('closeCoupon');
+
+closeCoupon.addEventListener('click', () => {
+  resultScreen.classList.add('hidden');
+});
+  const coupons = [
+    {title:"Un día solo para ti",desc:"Hoy quiero dedicarte mi tiempo, amor. Tú eliges qué hacemos y yo me quedo contigo."},
+    {title:"Una cita en Rave",desc:"Vale por una cita en Rave donde tú eliges todo lo que queramos ver."},
+    {title:"Un viaje al destino que desees",desc:"Elige nuestro destino, Dadita. Esta vez tú decides adónde nos escapamos."},
+    {title:"Tres besos… o más",desc:"Tres besos para empezar. Lo de los demás, amor, podemos negociarlo de cerca."},
+    
+    {title:"Un libro para leer contigo",desc:"Vale por ese libro que tantas ganas tienes de leer conmigo. Quiero conocer las historias que te gustan."},
+    
+    {title:"Una cita sorpresa",desc:"Tú solo tienes que venir conmigo, preciosa. Yo me encargo de preparar algo para los dos."},
+    
+    {title:"Una tarde de mimos",desc:"Vale por una tarde de abrazos, besos y toda la atención que quieras de tu esposo."},
+    
+    {title:"Una carta de amor",desc:"Te escribiré una carta para recordarte todas esas cosas que a veces no sé cómo decirte."},
+    
+    {title:"Un capricho tuyo",desc:"Hoy puedes pedirme un pequeño capricho y tu doui hará lo posible por consentirte."},
+    
+    {title:"Noche de películas",desc:"Tú escoges la película,yo miro atento sin distraerme con tus ojitos."},
+    
+    {title:"Una lluvia de cumplidos",desc:"Prepárate, mi bonita, porque pienso decirte todo lo que me gusta de ti hasta que te den nervios."},
+    
+    {title:"Un abrazo que dure mucho",desc:"Vale por uno de esos abrazos en los que no tengo ninguna prisa por soltarte, esos dónde el mundo pese menos."},
+    
+    {title:"Tú mandas hoy",desc:"Por esta ocasión, mi amor, tú llevas las riendas de nuestra relación.¿quieres algo? te lo doy, ¿quieres pegarme? me dejo."},
+    
+    {title:"Una sorpresa inspirada en ti",desc:"Voy a preparar algo pensando en tus gustos, tus ocurrencias y todas esas cosas que te hacen ser tú."},
+    
+    {title:"Un día sin quejas de tu esposo",desc:"Sí, amor, leíste bien. Un día entero sin que tu esposo proteste por tus trampas (me puedas amar más). No prometo no quejarme después de ese día."},
+    
+    {title:"Una canción",desc:"vale por una canción de amor, de esas que me hacen pensarte durante el día."},
+    
+    {title:"Una aventura nueva",desc:"Inventemos algo que nunca hayamos hecho en nuestra historia. Tú y yo, y a ver qué se nos ocurre."},
+    
+    {title:"Una declaración de amor",desc:"Hoy me toca recordarte, a mi manera, por qué sigo eligiéndote, mi Dadita."},
+    {title:"Elige mi apodo",desc:"Puedes bautizarme con un apodo nuevo,no importa si es tonto, lo tomo. Eso sí, luego no te quejes si te respondo con un zape."},
+    
+    {title:"Tener una noche de pasión",desc:"vale por una noche donde juguemos a hacer bebés."},
+    
+    {title:"Atención exclusiva",desc:"Vale por un ratito en el que tienes toda mi atención sin desaparecerme. Ven, cuéntame tus cosas, que quiero escucharte."},
+    
+    {title:"Una promesa que quieras que cumplamos",desc:"Pídeme una promesa que podamos cumplir dentro de nuestra historia, y la hacemos realidad,o mejor dicho, yo la hago realidad para ti."},
+    
+    {title:"Loui dramático",desc:"Vale por una dosis de tu esposo dramático, celoso y dispuesto a hacer lo que sea por atención de su esposa."},
+    
+    {title:"Una noche de música",desc:"Elige las canciones y hacemos nuestra propia noche musical. Quiero escuchar contigo hasta las que no conozco, no importa que tan raras sean"},
+    
+    {title:"Una petición especial",desc:"Tienes derecho a pedirme algo especial. Te escucho, preciosa."},
+    
+    {title:"Hablemos de nuestro futuro",desc:"Una cita para soñar juntos con nuestra casita, nuestras niñas y todas esas ideas que nos hacen tanta ilusión."},
+    
+    {title:"Un besito de reconciliación",desc:"Si hemos tenido un día difícil, vale por acercarme a ti, darte un beso y hablarlo juntos."},
+    
+    {title:"una pregunta",desc:"¿has querido preguntarme algo y no lo has hecho por miedo? este es tu momento, aprovecha el cupón"},
+    
+    {title:"el match que quieras",desc:"ya me acostumbre a milton y dan, pero este cupón vale para hacer otro match(no nos vamos a quitar el que llevamos, gracias, la amo)."},
+    
+    {title:"Una competencia de besos",desc:"A ver quién le da más besitos al otro. Aunque te advierto, amor, yo pienso ganar."},
+    
+    {title:"Una noche donde tú domines ;)",desc:"Esta vez tú decides y yo sigo tus indicaciones."},
+    
+    {title:"Cumplir una fantasía",desc:"Vale por hablar de esa fantasía que quieras compartir conmigo y hacerla realida."},
+    
+    {title:"Una noche de coqueteo",desc:"Vale por una noche de indirectas, miradas, provocaciones y un esposo que va a intentar hacerte ponerte nerviosa grrr."},
+    
+    {title:"por un masaje",desc:"Cuando te sientas cansada, dejame consentirte y ser el experto en masajes para ti"},
+    
+    {title:"Una petición sin vergüenza",desc:"Puedes decirme lo que te gustaría pedirme sin sentir vergüenza. Quiero que podamos hablar con confianza de eso."},
+    
+    {title:"Una noche a tu gusto",desc:"Tú escoges el ambiente, el plan y lo que te apetezca hacer conmigo. Yo quiero disfrutarlo a tu lado."},
+    
+    {title:"¿Quieres bailar?",desc:"Elige la música, tengamos un baile solo tú y yo."},
+    
+    {title:"Un regalo sorpresa",desc:"Vale por una sorpresa hecha o elegida pensando en ti. Porque sí, porque eres mi Dadita."},
+    
+    {title:"cuando el mundo pese",desc:"este cupón es especial, pues se puede reutilizar siempre que te sientas triste, enojada, confundida o cuando estés teniendo un mal día. solo ven y haré que tu mundo pese menos."},
+    
+    {title:"Cupón comodín ♡",desc:"Este lo guardas para cuando quieras. Tú propones el premio y lo hablamos juntos, mi amor."}
+  ];
+
+  const prizeTemplates = [
+    {kind:'cat',x:110,y:0,color:'#fff0f5'},
+    {kind:'bear',x:205,y:0,color:'#d8a477'},
+    {kind:'heart',x:300,y:0,color:'#ff6fae'},
+    {kind:'gift',x:395,y:0,color:'#8be8ff'},
+    {kind:'envelope',x:490,y:0,color:'#e6d1ff'}
+  ];
+
+  let prizes = [];
+  let clawX = 300;
+  let clawY = 85;
+  let phase = 'idle';
+  let animationFrame = 0;
+  let caughtPrize = null;
+let seenCoupons = [];
+
+try {
+  const savedCoupons = JSON.parse(
+    localStorage.getItem('louiDadaCoupons') || '[]'
+  );
+  if (Array.isArray(savedCoupons)) {
+    seenCoupons = savedCoupons.filter(
+      n => Number.isInteger(n) && n >= 0 && n < coupons.length
+    );
+  }
+} catch (error) {
+  seenCoupons = [];
+}
+  let currentCoupon = null;
+  let dragging = false;
+  let lastDropCaught = false;
+
+  function resetPrizes() {
+    prizes = prizeTemplates.map((p, i) => ({
+      kind:p.kind, x:p.x, y:255 + (i%2)*4,
+      color:p.color, caught:false
+    }));
+  }
+
+  function roundedRect(x,y,w,h,r,fill,stroke) {
+    ctx.beginPath();
+    ctx.roundRect(x,y,w,h,r);
+    if(fill) { ctx.fillStyle=fill; ctx.fill(); }
+    if(stroke) { ctx.strokeStyle=stroke; ctx.lineWidth=3; ctx.stroke(); }
+  }
+
+  function drawBackground() {
+    const gradient = ctx.createLinearGradient(0,0,0,360);
+    gradient.addColorStop(0,'#291044');
+    gradient.addColorStop(1,'#12091f');
+    ctx.fillStyle=gradient;
+    ctx.fillRect(0,0,600,360);
+
+    ctx.strokeStyle='#9b5cff22';
+    ctx.lineWidth=1;
+    for(let x=0;x<600;x+=30) {
+      ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,360);ctx.stroke();
+    }
+    for(let y=0;y<360;y+=30) {
+      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(600,y);ctx.stroke();
+    }
+
+    // Marco de la vitrina
+    roundedRect(12,12,576,336,'#31164c','#c17aff');
+    roundedRect(25,25,550,298,'#160b27','#6d3c94');
+
+    // Brillos de cristal
+    ctx.strokeStyle='#ffffff20';
+    ctx.lineWidth=5;
+    ctx.beginPath();ctx.moveTo(48,42);ctx.lineTo(48,300);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(60,42);ctx.lineTo(155,42);ctx.stroke();
+
+    // Piso de la máquina
+    ctx.fillStyle='#48225e';
+    ctx.fillRect(35,275,530,35);
+    ctx.strokeStyle='#ff8bd3';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(35,275);ctx.lineTo(565,275);ctx.stroke();
+
+    // Compartimento inferior
+    roundedRect(40,314,520,22,'#10071b','#8f54ba');
+    ctx.fillStyle='#ff94d4';
+    ctx.font='bold 11px Nunito';
+    ctx.textAlign='center';
+    ctx.fillText('♥ PREMIOS PARA MI NIÑA ♥',300,329);
+  }
+
+  function drawPlush(p) {
+    const x=p.x, y=p.y;
+    ctx.save();
+    ctx.translate(x,y);
+
+    if(p.kind==='cat') {
+      // Orejas
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle='#dca8cc';
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.moveTo(-27,-32);ctx.lineTo(-25,-59);ctx.lineTo(-5,-42);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(5,-42);ctx.lineTo(25,-59);ctx.lineTo(27,-32);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      // Cabeza y cuerpo
+      ctx.beginPath();ctx.ellipse(0,-28,31,27,0,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(0,2,26,29,0,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      // Patitas
+      ctx.beginPath();ctx.ellipse(-17,24,12,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(17,24,12,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      // Ojos y hocico
+      ctx.fillStyle='#392344';
+      ctx.beginPath();ctx.arc(-10,-30,3.5,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(10,-30,3.5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ff83b9';
+      ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(-4,-26);ctx.lineTo(4,-26);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#76516f';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(0,-18);ctx.lineTo(-5,-17);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(5,-17);ctx.stroke();
+      ctx.fillStyle='#ff8cce';
+      ctx.beginPath();ctx.arc(-23,-21,5,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(23,-21,5,0,Math.PI*2);ctx.fill();
+    } else if(p.kind==='bear') {
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle='#ad7d65';
+      ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(-22,-48,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.arc(22,-48,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(0,-31,31,28,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(0,5,27,31,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(-17,25,12,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(17,25,12,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff0df';
+      ctx.beginPath();ctx.ellipse(0,-22,13,10,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#51313b';
+      ctx.beginPath();ctx.arc(-10,-34,3.5,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(10,-34,3.5,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(0,-24,4,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#75494c';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(0,-17);ctx.lineTo(-5,-17);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,-17);ctx.lineTo(5,-17);ctx.stroke();
+    } else if(p.kind==='heart') {
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle='#ffb8dd';
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.moveTo(0,27);
+      ctx.bezierCurveTo(-12,16,-40,-3,-33,-26);
+      ctx.bezierCurveTo(-28,-45,-7,-43,0,-28);
+      ctx.bezierCurveTo(10,-46,31,-42,35,-24);
+      ctx.bezierCurveTo(40,-5,13,17,0,27);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#ffffff99';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(-19,-25);ctx.quadraticCurveTo(-17,-33,-10,-32);ctx.stroke();
+    } else if(p.kind==='gift') {
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle='#d3ffff';
+      ctx.lineWidth=3;
+      roundedRect(-29,-26,58,53,p.color,'#d3ffff');
+      ctx.fillStyle='#ff72b7';
+      ctx.fillRect(-5,-26,10,53);
+      ctx.fillRect(-29,-8,58,10);
+      ctx.beginPath();ctx.ellipse(-9,-33,11,7,-.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(9,-33,11,7,.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff5b3';
+      ctx.font='bold 16px Nunito';ctx.textAlign='center';
+      ctx.fillText('♥',0,13);
+    } else if(p.kind==='envelope') {
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle='#d9baff';
+      ctx.lineWidth=3;
+      roundedRect(-34,-24,68,48,p.color,'#d9baff');
+      ctx.beginPath();ctx.moveTo(-32,-20);ctx.lineTo(0,4);ctx.lineTo(32,-20);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-32,20);ctx.lineTo(-5,0);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(32,20);ctx.lineTo(5,0);ctx.stroke();
+      ctx.fillStyle='#ff5da8';
+      ctx.beginPath();ctx.moveTo(0,15);ctx.bezierCurveTo(-8,8,-15,2,-10,-4);ctx.bezierCurveTo(-5,-9,0,-3,0,0);ctx.bezierCurveTo(3,-7,12,-7,13,0);ctx.bezierCurveTo(15,6,6,12,0,15);ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawClaw() {
+    // Cable
+    ctx.strokeStyle='#d4c2e8';
+    ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(clawX,31);ctx.lineTo(clawX,clawY);ctx.stroke();
+
+    // Carro de la garra
+    roundedRect(clawX-28,25,56,15,'#9b5cff','#e2b6ff');
+    ctx.fillStyle='#ffb7df';
+    ctx.beginPath();ctx.arc(clawX,32,4,0,Math.PI*2);ctx.fill();
+
+    // Garra
+    ctx.strokeStyle='#d9d6e8';
+    ctx.lineWidth=6;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(clawX,clawY);ctx.lineTo(clawX,clawY+15);ctx.stroke();
+    const spread = phase==='down' ? 19 : phase==='lifting' && caughtPrize ? 13 : 23;
+    ctx.beginPath();
+    ctx.moveTo(clawX,clawY+12);
+    ctx.lineTo(clawX-spread,clawY+30);
+    ctx.lineTo(clawX-spread+4,clawY+42);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(clawX,clawY+12);
+    ctx.lineTo(clawX+spread,clawY+30);
+    ctx.lineTo(clawX+spread-4,clawY+42);
+    ctx.stroke();
+
+    if(caughtPrize && (phase==='lifting'||phase==='result')) {
+      drawPlush({kind:caughtPrize.kind,x:clawX,y:clawY+67,color:caughtPrize.color});
+    }
+    ctx.lineCap='butt';
+  }
+
+  function render() {
+    drawBackground();
+    prizes.forEach(p=>{if(!p.caught)drawPlush(p);});
+    drawClaw();
+  }
+
+  function setStatus(message) { statusText.textContent=message; }
+
+  function setJoystickPosition() {
+    const percent = ((clawX-65)/(600-130))*100;
+    joystickBall.style.left = `calc(${percent}% - 17px)`;
+  }
+
+  function moveClawFromPointer(event) {
+    const rect = joystick.getBoundingClientRect();
+    const px = Math.max(0,Math.min(rect.width,event.clientX-rect.left));
+    const percent = px/rect.width;
+    clawX = 65 + percent*(600-130);
+    setJoystickPosition();
+    render();
+  }
+
+  joystick.addEventListener('pointerdown', event => {
+    if(phase!=='idle') return;
+    dragging=true;
+    joystick.setPointerCapture(event.pointerId);
+    moveClawFromPointer(event);
+  });
+  joystick.addEventListener('pointermove', event => {
+    if(dragging && phase==='idle') moveClawFromPointer(event);
+  });
+  joystick.addEventListener('pointerup', () => { dragging=false; });
+  joystick.addEventListener('pointercancel', () => { dragging=false; });
+
+
+function getAvailableCoupon() {
+  const remaining = coupons
+    .map((coupon, index) => ({coupon, index}))
+    .filter(item => !seenCoupons.includes(item.index));
+
+  if (remaining.length === 0) return null;
+
+  return remaining[Math.floor(Math.random() * remaining.length)];
+}
+
+function renderCollection() {
+  const container = document.getElementById('couponCollection');
+  const progress = document.getElementById('collectionProgress');
+  const fill = document.getElementById('collectionFill');
+
+  progress.textContent = `${seenCoupons.length} / ${coupons.length} CUPONES`;
+  fill.style.width = `${seenCoupons.length / coupons.length * 100}%`;
+
+  container.replaceChildren();
+
+  coupons.forEach((coupon, index) => {
+    const earned = seenCoupons.includes(index);
+    const card = document.createElement('button');
+
+    card.className = 'collection-card' + (earned ? ' earned' : '');
+    card.type = 'button';
+
+    const number = document.createElement('span');
+    number.className = 'number';
+    number.textContent = `CUPÓN ${String(index + 1).padStart(2, '0')}`;
+
+    const name = document.createElement('strong');
+    name.textContent = earned ? coupon.title : '??? Premio misterioso';
+
+    card.append(number, name);
+
+    if (earned) {
+      card.addEventListener('click', () => {
+        couponTitle.textContent = coupon.title;
+        couponDesc.textContent = coupon.desc;
+        ticketNote.textContent = '♡ Un recuerdo de tu esposo Loui ♡';
+        resultScreen.classList.remove('hidden');
+      });
+    } else {
+      card.disabled = true;
+      card.title = '¡Consigue este cupón jugando!';
+    }
+
+    container.appendChild(card);
+  });
+
+  if (seenCoupons.length === coupons.length) {
+    progress.textContent = '¡LOS 40 CUPONES CONSEGUIDOS! ';
+  }
+}
+
+
+
+function showCoupon(coupon, index) {
+  if (!coupon) {
+    couponTitle.textContent = '¡Colección completa! ';
+    couponDesc.textContent =
+      '¡Conseguiste los 40 cupones, Dadita! Tu esposo Loui preparó cada uno pensando en ti.';
+    ticketNote.textContent = '40 de 40 · Hechos con amor ';
+    actionButton.textContent = '♡ JUGAR DE NUEVO ';
+    resultScreen.classList.remove('hidden');
+    renderCollection();
+    return;
+  }
+
+  if (!seenCoupons.includes(index)) {
+    seenCoupons.push(index);
+
+    try {
+      localStorage.setItem(
+        'louiDadaCoupons',
+        JSON.stringify(seenCoupons)
+      );
+    } catch (error) {}
+
+    renderCollection();
+  }
+
+  currentCoupon = coupon;
+  couponTitle.textContent = coupon.title;
+  couponDesc.textContent = coupon.desc;
+  ticketNote.textContent = '♡ Canjeable con tu esposo Loui ♡';
+  resultScreen.classList.remove('hidden');
+  actionButton.textContent = '♡ JUGAR DE NUEVO ♡';
+}
+
+  function startDrop() {
+    if(phase!=='idle') return;
+
+    resultScreen.classList.add('hidden');
+    if(prizes.every(p=>p.caught)) resetPrizes();
+
+    phase='down';
+    animationFrame=0;
+    caughtPrize=null;
+    lastDropCaught=false;
+    actionButton.disabled=true;
+    setStatus('¡La garra está bajando! ♡');
+    animateDrop();
+  }
+
+  function animateDrop() {
+    animationFrame++;
+
+    if(phase==='down') {
+      clawY += 3.2;
+      if(clawY>=225) {
+        clawY=225;
+        const available=prizes.filter(p=>!p.caught);
+        let nearest=null;
+        let distance=Infinity;
+        available.forEach(p=>{
+          const d=Math.abs(p.x-clawX);
+          if(d<distance){distance=d;nearest=p;}
+        });
+
+        if(nearest && distance<59) {
+          nearest.caught=true;
+          caughtPrize=nearest;
+          lastDropCaught=true;
+        }
+        phase='lifting';
+        setStatus(lastDropCaught?'¡Lo atrapaste! ¡Subiendo tu premio! ♡':'¡Subiendo la garra…!');
+      }
+    } else if(phase==='lifting') {
+      clawY -= 3.2;
+      if(clawY<=85) {
+        clawY=85;
+        phase='result';
+      }
+    }
+
+    render();
+
+    if(phase==='result') {
+      if(lastDropCaught) {
+        const prize = getAvailableCoupon();
+showCoupon(prize ? prize.coupon : null, prize ? prize.index : null);
+        setStatus('¡Premio conseguido! Este cupón es para ti, Dadita. ♡');
+      } else {
+        showMiss();
+        setStatus('¡No te rindas, amor! Prueba en otra posición. ♡');
+      }
+      phase='idle';
+      actionButton.disabled=false;
+      return;
+    }
+
+    requestAnimationFrame(animateDrop);
+  }
+
+  actionButton.addEventListener('click', () => {
+    if(phase!=='idle') return;
+    if(actionButton.textContent.includes('JUGAR DE NUEVO') ||
+       actionButton.textContent.includes('INTENTAR OTRA VEZ')) {
+      resultScreen.classList.add('hidden');
+    }
+    startDrop();
+  });
+
+function showMiss() {
+  setStatus('¡Casi, amor! 💗 Prueba en otra posición. ♡');
+}
+  
+renderCollection();
+  resetPrizes();
+  render();
+  setJoystickPosition();
+})();
+</script>
+</body>
+
+<!-- PLAYLIST DE LOUi Y DADA 💗 -->
+<div id="nuestra-playlist" style="
+  margin: 20px auto;
+  padding: 16px;
+  max-width: 420px;
+  border: 2px solid #ff79d1;
+  border-radius: 18px;
+  background: #21112f;
+  color: #fff0fb;
+  text-align: center;
+  font-family: sans-serif;
+  box-shadow: 0 0 18px #ff4fc866;
+">
+  <h3 style="margin: 0 0 8px; color: #ff9cde;">
+    ♫ Nuestra playlist ♡
+  </h3>
+  <p style="margin: 0 0 14px; font-size: 13px;">
+    Para el gran amor de mi vida,mi futura esposa y madre de mis hijas 💗
+  </p>
+  <iframe
+    width="100%"
+    height="180"
+    src="https://www.youtube-nocookie.com/embed/videoseries?list=PLSaZNNcMGXp8&autoplay=1"
+    title="Nuestra playlist"
+    style="border:0; border-radius:12px;"
+    allow="autoplay; encrypted-media; picture-in-picture"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen>
+  </iframe>
+</div>
+<!-- FIN DE LA PLAYLIST -->
+
+</html>
